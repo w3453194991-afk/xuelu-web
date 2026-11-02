@@ -44,6 +44,8 @@ npm run reset-data # 清空服务端数据，回到初始种子数据
 - 数据文件：`server/data/store.json`（首次启动自动写入种子数据，约 50 KB）。
 - 平台管理令牌：`xuelu-admin`（`我的 → 平台管理`）。
 - 演示账号：直接注册一个 11 位手机号即可，密码 8 位以上。
+- 想用手机验证「多设备共享同一份数据」：`HOST=0.0.0.0 npm start`
+  （Windows PowerShell：`$env:HOST='0.0.0.0'; npm start`），启动日志会打印局域网地址。
 
 改完小程序源码后重新构建：
 

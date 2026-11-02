@@ -13,11 +13,14 @@
  *
  * 环境变量：
  *   PORT / 第一个命令行参数   监听端口
+ *   HOST                    监听地址（默认 127.0.0.1；填 0.0.0.0 可让同一局域网
+ *                           的手机访问，用于验证多设备共享同一份数据）
  *   XUELU_DATA              数据文件路径（默认 server/data/store.json）
  * ------------------------------------------------------------------ */
 
 import http from 'node:http';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
@@ -28,6 +31,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(here, '..');
 const DIST = path.join(ROOT, 'dist');
 const PORT = Number(process.argv[2] || process.env.PORT || 5180);
+const HOST = process.env.HOST || '127.0.0.1';
 const DATA_FILE = process.env.XUELU_DATA || path.join(here, 'data', 'store.json');
 const MAX_BODY = 8 * 1024 * 1024;
 
@@ -176,9 +180,18 @@ const server = http.createServer(async (req, res) => {
   serveStatic(req, res, pathname);
 });
 
-server.listen(PORT, '127.0.0.1', () => {
+server.listen(PORT, HOST, () => {
   console.log('');
   console.log(`学鹭伴学 · 动态网页版  →  http://127.0.0.1:${PORT}`);
+
+  if (HOST === '0.0.0.0') {
+    const lan = Object.values(os.networkInterfaces())
+      .flat()
+      .filter(n => n && n.family === 'IPv4' && !n.internal)
+      .map(n => `http://${n.address}:${PORT}`);
+    if (lan.length) console.log(`同一局域网（手机）可访问：${lan.join('  ')}`);
+  }
+
   console.log(`数据文件：${DATA_FILE}`);
   console.log('（前端启动时会探测 /api/health；静态托管没有这个接口，会自动退回浏览器本地演示模式）');
   console.log('');
