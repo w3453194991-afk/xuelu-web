@@ -61,6 +61,22 @@ function dropMissingAssets(wxml, route) {
   });
 }
 
+/* 把 config.js 切到「云函数模式」：网页版里 wx.cloud.callFunction 由运行时
+ * 映射成 POST /api/<name>，服务端不在时 init 会抛错、自动退回本地数据。 */
+function patchConfig(source) {
+  if (!source.includes('const USE_CLOUD = false;')) {
+    fail('miniprogram/utils/config.js 结构与预期不符：找不到 "const USE_CLOUD = false;"');
+  }
+  const out = source
+    .replace('const USE_CLOUD = false;', 'const USE_CLOUD = true;')
+    .replace(/const CLOUD_ENV = '';/, "const CLOUD_ENV = 'web';");
+
+  if (!out.includes("const CLOUD_ENV = 'web';")) {
+    fail('miniprogram/utils/config.js 结构与预期不符：找不到空的 CLOUD_ENV');
+  }
+  return out;
+}
+
 /* ---------------- 主流程 ---------------- */
 
 function main() {
@@ -154,8 +170,28 @@ function main() {
   addTree(modules, path.join(here, 'src', 'runtime'), 'src/runtime/');
   modules.set('@gen', templateParts.join('\n'));
 
+  /* 网页版统一走「云函数模式」：运行时的 wx.cloud.callFunction 被映射成 HTTP 请求。
+     服务端不可用（纯静态托管）时，wx.cloud.init 会失败，自动退回内置本地数据。 */
+  const configId = 'miniprogram/utils/config.js';
+  modules.set(configId, patchConfig(modules.get(configId)));
+
   const js = bundle({ entry: 'src/runtime/boot.js', modules });
   fs.writeFileSync(path.join(DIST, 'app.js'), js);
+
+  /* ---- 3b. 服务端业务包：同一套 mock 后端，打成 Node 可 require 的 CJS ---- */
+  const serverModules = new Map();
+  addTree(serverModules, MINI, 'miniprogram/');
+  serverModules.set(
+    'server/entry.js',
+    "module.exports = {\n" +
+    "  mock: require('miniprogram/utils/mock.js'),\n" +
+    "  config: require('miniprogram/utils/config.js')\n" +
+    "};\n"
+  );
+
+  const serverJs = bundle({ entry: 'server/entry.js', modules: serverModules, expose: true });
+  fs.mkdirSync(path.join(DIST, 'server'), { recursive: true });
+  fs.writeFileSync(path.join(DIST, 'server', 'business.cjs'), serverJs);
 
   /* ---- 4. 外壳 HTML ---- */
   const shell = fs.readFileSync(path.join(here, 'src', 'shell.html'), 'utf8');
@@ -176,6 +212,7 @@ function main() {
   log(`✔ dist/index.html  ${kb(path.join(DIST, 'index.html'))}`);
   log(`✔ dist/app.css     ${kb(path.join(DIST, 'app.css'))}`);
   log(`✔ dist/app.js      ${kb(path.join(DIST, 'app.js'))}（${modules.size} 个模块）`);
+  log(`✔ dist/server/business.cjs  ${kb(path.join(DIST, 'server', 'business.cjs'))}（服务端业务包）`);
   if (fs.existsSync(path.join(DIST, 'assets'))) log('✔ dist/assets      静态资源已复制');
 
   if (warnings.length) {

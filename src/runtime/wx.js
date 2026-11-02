@@ -320,19 +320,81 @@ function getFileSystemManager() {
   return { readFile, writeFile() {}, access() {}, unlink() {} };
 }
 
-/* ---------------- 云开发（未启用） ---------------- */
+/* ---------------- 后端连接探测 ---------------- */
 
+/* 页面可用两种后端：同一份构建产物，启动时探测 /api/health。
+   - 有服务端：走 HTTP（数据存服务器，多设备共享）
+   - 无服务端（纯静态托管）：退回小程序自带的内置数据层（存浏览器本地） */
+let serverReady = false;
+let probing = null;
+
+function probeBackend() {
+  if (probing) return probing;
+
+  const controller = typeof AbortController === 'function' ? new AbortController() : null;
+  const timer = controller ? setTimeout(() => controller.abort(), 1500) : 0;
+
+  probing = fetch('api/health', {
+    method: 'GET',
+    headers: { accept: 'application/json' },
+    cache: 'no-store',
+    signal: controller ? controller.signal : undefined
+  })
+    .then(res => (res.ok ? res.json() : null))
+    .catch(() => null)
+    .then(info => {
+      serverReady = !!(info && info.ok);
+      clearTimeout(timer);
+      document.body.setAttribute('data-backend', serverReady ? 'server' : 'local');
+      console.info(serverReady
+        ? '[学鹭] 已连接服务端，数据存服务器'
+        : '[学鹭] 未检测到服务端，使用浏览器本地演示数据');
+      return serverReady;
+    });
+
+  return probing;
+}
+
+/* ---------------- 云开发接口映射到 HTTP ---------------- */
+
+/* utils/api.js 通过 wx.cloud.callFunction 走「云函数模式」。
+   网页版把同一次调用映射成 POST /api/<函数名>：
+     { action, token, ... }  →  { code, data }  /  { code, message, needLogin }
+   serverReady 为 false 时 init 抛错，api.js 的 useCloud() 随即返回 false，
+   自动退回内置本地数据，所以同一份 dist 既能动态部署也能静态托管。 */
 const cloud = {
   init() {
-    console.warn('[wx] 网页版未启用微信云开发，数据走内置本地存储');
+    if (!serverReady) throw new Error('未连接服务端');
   },
+
   callFunction(opts) {
-    const message = '网页版未启用微信云开发（config.USE_CLOUD = false）';
-    console.error('[wx] ' + message);
-    if (opts && typeof opts.fail === 'function') opts.fail({ errMsg: message });
+    const o = opts || {};
+    if (!serverReady) {
+      setTimeout(() => {
+        if (typeof o.fail === 'function') o.fail({ errMsg: '未连接服务端' });
+      }, 0);
+      return;
+    }
+
+    fetch('api/' + encodeURIComponent(o.name), {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(o.data || {})
+    })
+      .then(res => {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(result => {
+        if (typeof o.success === 'function') o.success({ result });
+      })
+      .catch(err => {
+        if (typeof o.fail === 'function') o.fail({ errMsg: String((err && err.message) || err) });
+      });
   },
+
   database() {
-    throw new Error('网页版未启用微信云开发');
+    throw new Error('网页版不使用云数据库');
   }
 };
 
@@ -396,6 +458,7 @@ const wx = {
 
   /* 其它 */
   cloud,
+  probeBackend,
   nextTick,
   canIUse,
   env: { USER_DATA_PATH: 'local://' }

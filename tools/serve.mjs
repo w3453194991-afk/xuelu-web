@@ -1,4 +1,5 @@
-/* 零依赖静态服务器：node tools/serve.mjs [端口] */
+/* 零依赖静态服务器（只验静态产物，没有后端接口）
+   node tools/serve.mjs [端口]     默认 5181 */
 
 import http from 'node:http';
 import fs from 'node:fs';
@@ -7,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const DIST = path.resolve(here, '..', 'dist');
-const port = Number(process.argv[2] || process.env.PORT || 5180);
+const port = Number(process.argv[2] || process.env.PORT || 5181);
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -58,5 +59,5 @@ http.createServer((req, res) => {
     res.end(data);
   });
 }).listen(port, '127.0.0.1', () => {
-  console.log(`学鹭伴学 · 网页版  →  http://127.0.0.1:${port}`);
+  console.log(`学鹭伴学 · 静态预览（无后端）  →  http://127.0.0.1:${port}`);
 });

@@ -6,9 +6,11 @@
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
-    "dev": "node build.mjs && node tools/serve.mjs",
-    "start": "node tools/serve.mjs",
-    "verify": "node tools/verify.mjs"
+    "dev": "node build.mjs && node server/index.mjs",
+    "start": "node server/index.mjs",
+    "static": "node tools/serve.mjs",
+    "verify": "node tools/verify.mjs",
+    "reset-data": "node server/reset.mjs"
   },
   "engines": {
     "node": ">=18"

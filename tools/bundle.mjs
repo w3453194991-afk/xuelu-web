@@ -36,10 +36,11 @@ export function transformRequires(code, id, resolve) {
 }
 
 /**
- * @param {{entry: string, modules: Map<string, string>}} input
- * @returns {string} 可直接 <script> 引入的浏览器脚本
+ * @param {{entry: string, modules: Map<string, string>, expose?: boolean}} input
+ * @returns {string} expose 为 true 时输出 CommonJS 模块（供 Node require），
+ *                   否则输出可直接 <script> 引入的浏览器脚本
  */
-export function bundle({ entry, modules }) {
+export function bundle({ entry, modules, expose = false }) {
   const ids = new Set(modules.keys());
   const resolve = createResolver(ids);
 
@@ -69,7 +70,9 @@ export function bundle({ entry, modules }) {
     parts.push('};');
   }
 
-  parts.push(`__require(${JSON.stringify(entry)});`);
+  parts.push(expose
+    ? `module.exports = __require(${JSON.stringify(entry)});`
+    : `__require(${JSON.stringify(entry)});`);
   parts.push('})();');
 
   return parts.join('\n');

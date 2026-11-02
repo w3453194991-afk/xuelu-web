@@ -1,4 +1,4 @@
-/* ------------------------------------------------------------------ *
+﻿/* ------------------------------------------------------------------ *
  * 交互流程验证：用真实浏览器点一遍关键链路
  *
  *   node tools/flow.mjs [端口]
@@ -11,6 +11,8 @@ import { sleep, launchChrome, newTarget, closeTarget, Session } from './cdp.mjs'
 
 const BASE = 'http://127.0.0.1:' + Number(process.argv[2] || 5180);
 const PORT = 9334;
+/* 服务端数据是持久化的，每次跑用一个新手机号，避免「该手机号已注册」 */
+const PHONE = '139' + String(Date.now()).slice(-8);
 
 let passed = 0;
 const failures = [];
@@ -149,7 +151,7 @@ async function main() {
     await sleep(250);
     check('切换到注册模式', (await s.eval(`document.querySelectorAll('.wx-page .seg')[1].classList.contains('seg-on')`)) === true);
 
-    await typeInto(0, '13900001111');
+    await typeInto(0, PHONE);
     await sleep(200);
     await typeInto(1, 'test1234');
     await sleep(250);
@@ -176,7 +178,7 @@ async function main() {
 
     await typeInto(0, '小明');
     await sleep(200);
-    await typeInto(1, '13900001111');
+    await typeInto(1, PHONE);
     await sleep(300);
 
     await clickSel('.wx-page .footer-bar .btn');

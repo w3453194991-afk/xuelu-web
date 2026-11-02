@@ -4,6 +4,9 @@ node_modules/
 # 逐页截图产物（由 npm run verify 生成，仓库里只保留 docs/screenshots 的精选图）
 .shots/
 
+# 服务端运行时数据（订单 / 账号，不进仓库）
+server/data/
+
 # 系统 / 编辑器杂项
 .DS_Store
 Thumbs.db

@@ -18,6 +18,9 @@ globalThis.getCurrentPages = host.getCurrentPages;
 
 host.install(generated);
 
-require('miniprogram/app.js');
-
-host.start();
+/* 先探测有没有服务端：有 → 页面走 HTTP 接口；没有（静态托管）→ 走内置本地数据。
+   探测最多等 1.5 秒，不会拖慢首屏。 */
+wxApi.probeBackend().then(() => {
+  require('miniprogram/app.js');
+  host.start();
+});
