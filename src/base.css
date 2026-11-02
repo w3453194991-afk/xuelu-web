@@ -1,0 +1,99 @@
+/* ------------------------------------------------------------------ *
+ * 基础复位：把 WXML 标签在浏览器里还原成小程序里的盒模型
+ *
+ * 页面自己的 WXSS 在这之后加载，所以这里的元素级规则优先级最低，
+ * 不会覆盖任何作者样式。
+ * ------------------------------------------------------------------ */
+
+view,
+scroll-view,
+picker,
+block {
+  display: block;
+}
+
+text {
+  display: inline;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  border: 0;
+}
+
+/* image 的 mode → object-fit */
+img[mode='aspectFit'] { object-fit: contain; }
+img[mode='aspectFill'] { object-fit: cover; }
+img[mode='scaleToFill'] { object-fit: fill; }
+img[mode='widthFix'] { height: auto; }
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  text-align: center;
+}
+
+button::after {
+  border: none;
+}
+
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  outline: none;
+  margin: 0;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #b9aca0;
+}
+
+textarea {
+  resize: none;
+}
+
+/* scroll-view：滚动由 scroll-y / scroll-x 属性控制 */
+scroll-view {
+  overflow: hidden;
+}
+
+scroll-view[scroll-y] {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+scroll-view[scroll-x] {
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+scroll-view[enable-flex] {
+  display: flex;
+}
+
+picker {
+  cursor: pointer;
+}
+
+video {
+  display: block;
+  width: 100%;
+}
+
+[hidden] {
+  display: none !important;
+}

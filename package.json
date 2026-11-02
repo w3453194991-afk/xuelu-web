@@ -1,0 +1,16 @@
+{
+  "name": "xuelu-web",
+  "version": "1.0.0",
+  "private": true,
+  "description": "学鹭伴学网页版：由微信小程序源码编译生成的静态站点",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "dev": "node build.mjs && node tools/serve.mjs",
+    "start": "node tools/serve.mjs",
+    "verify": "node tools/verify.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

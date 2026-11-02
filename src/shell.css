@@ -1,0 +1,458 @@
+/* ------------------------------------------------------------------ *
+ * 网页外壳：手机视口（桌面居中）、导航栏、tabBar、浮层
+ *
+ * 该文件在小程序样式之后加载，因此这里的布局规则可以覆盖业务样式里
+ * position:fixed 的底部条 / 悬浮球，把它们约束在手机视口内。
+ * ------------------------------------------------------------------ */
+
+html {
+  /* 1rpx = 0.01rem：视口宽 / 7.5，桌面端封顶 480px（= 64px 根字号） */
+  font-size: clamp(24px, calc(100vw / 7.5), 64px);
+  -webkit-text-size-adjust: 100%;
+}
+
+:root {
+  --nav-h: 0.72rem;
+  --tab-h: 0.84rem;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: #e8ddd1;
+  background-image: radial-gradient(120% 90% at 50% 0%, #f2e9df 0%, #e2d5c6 55%, #dbcdbc 100%);
+  color: #4a382a;
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wx-root {
+  position: relative;
+  width: 7.5rem;
+  margin: 0 auto;
+  min-height: 100vh;
+  box-shadow: 0 0 0.9rem rgba(72, 46, 22, 0.16);
+}
+
+@media (max-width: 480px) {
+  .wx-root {
+    box-shadow: none;
+  }
+  body {
+    background: #fdf8f2;
+  }
+}
+
+.wx-main {
+  display: block;
+}
+
+/* 页面可视高度：小程序里 100vh 不含原生导航栏与 tabBar，这里补上口径 */
+.wx-page {
+  --page-h: calc(100vh - var(--nav-h));
+}
+
+body.has-tab .wx-page {
+  --page-h: calc(100vh - var(--nav-h) - var(--tab-h) - env(safe-area-inset-bottom));
+}
+
+body.has-tab .wx-main {
+  padding-bottom: calc(var(--tab-h) + env(safe-area-inset-bottom));
+}
+
+/* ---------------- 导航栏 ---------------- */
+
+.wx-nav {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--nav-h);
+  padding: 0 0.9rem;
+  background: #b8500f;
+  color: #ffffff;
+}
+
+.wx-nav-title {
+  margin: 0;
+  font-size: 0.3rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wx-nav-back {
+  position: absolute;
+  left: 0.08rem;
+  top: 0;
+  bottom: 0;
+  width: 0.62rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.46rem;
+  line-height: 1;
+  color: inherit;
+  border-radius: 0.1rem;
+}
+
+.wx-nav-back[hidden] {
+  display: none;
+}
+
+.wx-nav-back:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* ---------------- tabBar ---------------- */
+
+.wx-tabbar {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: min(100vw, 7.5rem);
+  display: flex;
+  height: calc(var(--tab-h) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  background: #ffffff;
+  border-top: 1px solid #f0e3d6;
+  z-index: 45;
+}
+
+.wx-tabbar[hidden] {
+  display: none;
+}
+
+.wx-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.04rem;
+  color: #a28773;
+  font-size: 0.2rem;
+  line-height: 1;
+}
+
+.wx-tab-icon svg {
+  display: block;
+  width: 0.4rem;
+  height: 0.4rem;
+}
+
+.wx-tab.on {
+  color: #b8500f;
+}
+
+.wx-tab.on .wx-tab-icon svg {
+  stroke-width: 2.1;
+}
+
+/* ---------------- 固定元素约束在手机视口内 ---------------- */
+
+.wx-root .footer-bar {
+  left: max(0px, calc((100vw - 7.5rem) / 2));
+  right: max(0px, calc((100vw - 7.5rem) / 2));
+}
+
+body.has-tab .footer-bar {
+  bottom: calc(var(--tab-h) + env(safe-area-inset-bottom));
+}
+
+.wx-root .float-assistant {
+  right: max(0.28rem, calc((100vw - 7.5rem) / 2 + 0.28rem));
+}
+
+/* ---------------- 浮层 ---------------- */
+
+#wx-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.wx-mask {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: max(0px, calc((100vw - 7.5rem) / 2));
+  right: max(0px, calc((100vw - 7.5rem) / 2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(38, 26, 16, 0.45);
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  pointer-events: auto;
+}
+
+.wx-mask.on {
+  opacity: 1;
+}
+
+.wx-mask-bottom {
+  align-items: flex-end;
+}
+
+.wx-mask-clear {
+  background: transparent;
+}
+
+/* toast */
+
+.wx-toast {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(0.94);
+  min-width: 2rem;
+  max-width: 5.2rem;
+  padding: 0.2rem 0.28rem;
+  border-radius: 0.16rem;
+  background: rgba(38, 26, 16, 0.86);
+  color: #ffffff;
+  font-size: 0.25rem;
+  line-height: 1.5;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  pointer-events: none;
+  z-index: 130;
+}
+
+.wx-toast.on {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.wx-toast-icon {
+  font-size: 0.5rem;
+  line-height: 1.1;
+  margin-bottom: 0.06rem;
+}
+
+.wx-toast-icon.ok {
+  color: #7fd18b;
+}
+
+.wx-toast-icon.bad {
+  color: #f08a80;
+}
+
+.wx-toast-text {
+  word-break: break-word;
+}
+
+/* loading */
+
+.wx-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.12rem;
+  padding: 0.24rem 0.32rem;
+  border-radius: 0.16rem;
+  background: rgba(38, 26, 16, 0.82);
+  color: #ffffff;
+  font-size: 0.24rem;
+  pointer-events: auto;
+}
+
+.wx-spinner {
+  width: 0.34rem;
+  height: 0.34rem;
+  border: 2px solid rgba(255, 255, 255, 0.28);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: wx-spin 0.8s linear infinite;
+}
+
+.wx-spinner-lg {
+  width: 0.44rem;
+  height: 0.44rem;
+  border-width: 3px;
+}
+
+@keyframes wx-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* modal */
+
+.wx-modal {
+  width: min(6.1rem, 80%);
+  border-radius: 0.2rem;
+  background: #fffaf5;
+  overflow: hidden;
+  box-shadow: 0 0.2rem 0.6rem rgba(50, 30, 12, 0.24);
+}
+
+.wx-modal-title {
+  padding: 0.32rem 0.3rem 0;
+  font-size: 0.3rem;
+  font-weight: 700;
+  text-align: center;
+  color: #4a382a;
+}
+
+.wx-modal-body {
+  padding: 0.18rem 0.3rem 0.3rem;
+  font-size: 0.26rem;
+  line-height: 1.65;
+  text-align: center;
+  color: #6b4a2b;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.wx-modal-actions {
+  display: flex;
+  border-top: 1px solid #f0e3d6;
+}
+
+.wx-modal-btn {
+  flex: 1;
+  padding: 0.24rem 0;
+  font-size: 0.28rem;
+  color: #6b4a2b;
+  border-radius: 0;
+}
+
+.wx-modal-btn + .wx-modal-btn {
+  border-left: 1px solid #f0e3d6;
+}
+
+.wx-modal-btn-primary {
+  color: #b8500f;
+  font-weight: 700;
+}
+
+.wx-modal-btn:hover {
+  background: #fdf2e7;
+}
+
+/* 选择器底部弹层 */
+
+.wx-sheet {
+  width: 100%;
+  max-height: 70%;
+  display: flex;
+  flex-direction: column;
+  background: #fffaf5;
+  border-radius: 0.2rem 0.2rem 0 0;
+  transform: translateY(100%);
+  transition: transform 0.22s ease;
+  overflow: hidden;
+}
+
+.wx-mask.on .wx-sheet {
+  transform: translateY(0);
+}
+
+.wx-sheet-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.22rem 0.24rem;
+  border-bottom: 1px solid #f0e3d6;
+}
+
+.wx-sheet-title {
+  font-size: 0.26rem;
+  font-weight: 600;
+  color: #6b4a2b;
+}
+
+.wx-sheet-cancel {
+  position: absolute;
+  right: 0.2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.24rem;
+  color: #94897e;
+}
+
+.wx-sheet-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.06rem 0 calc(0.1rem + env(safe-area-inset-bottom));
+}
+
+.wx-sheet-item {
+  display: block;
+  width: 100%;
+  padding: 0.22rem 0.3rem;
+  font-size: 0.27rem;
+  color: #4a382a;
+  text-align: center;
+  border-radius: 0;
+}
+
+.wx-sheet-item + .wx-sheet-item {
+  border-top: 1px solid #f7efe6;
+}
+
+.wx-sheet-item.on {
+  color: #b8500f;
+  font-weight: 700;
+  background: #fdf2e7;
+}
+
+.wx-sheet-item:hover {
+  background: #fdf2e7;
+}
+
+.wx-sheet-empty {
+  padding: 0.4rem 0;
+  text-align: center;
+  color: #94897e;
+  font-size: 0.24rem;
+}
+
+/* 原生日期控件（picker mode=date） */
+
+.wx-date-input {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+picker.wx-picker-native {
+  overflow: hidden;
+}
+
+/* 桌面端细滚动条 */
+
+@media (hover: hover) and (pointer: fine) {
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(150, 118, 88, 0.35);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}

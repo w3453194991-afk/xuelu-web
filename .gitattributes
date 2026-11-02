@@ -1,0 +1,7 @@
+# 统一换行符，避免 Windows 检出后产生无谓的 diff
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
